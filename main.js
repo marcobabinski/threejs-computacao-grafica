@@ -112,21 +112,21 @@ const gltfLoader4 = new GLTFLoader();
 gltfLoader4.load('sceneradio.gltf', (gltf) => {
     sceneradio = gltf.scene;
     sceneradio.scale.set(0.1, 0.1, 0.1);  // Ajustado para 0.1 de escala
-    sceneradio.position.set(5, 0, 0);  // Colocado ao lado do modelo principal
+    sceneradio.position.set(3, 0.5, 0);  // Colocado ao lado do modelo principal
     sceneradio.rotation.set(0, 90, 0)
     scene3.add(sceneradio);
 
-    // Adicionar música
-    const listener = new THREE.AudioListener();
-    camera.add(listener);
-    const sound = new THREE.Audio(listener);
-    const audioLoader = new THREE.AudioLoader();
-    audioLoader.load('song.mp3', (buffer) => {
-        sound.setBuffer(buffer);
-        sound.setLoop(true);
-        sound.setVolume(0.5);
-        sound.play();
-    });
+    // // Adicionar música
+    // const listener = new THREE.AudioListener();
+    // camera.add(listener);
+    // const sound = new THREE.Audio(listener);
+    // const audioLoader = new THREE.AudioLoader();
+    // audioLoader.load('song.mp3', (buffer) => {
+    //     sound.setBuffer(buffer);
+    //     sound.setLoop(true);
+    //     sound.setVolume(0.5);
+    //     sound.play();
+    // });
 });
 
 // ---------- Alternar entre cenas ----------
@@ -144,6 +144,59 @@ document.getElementById('scene3Btn').addEventListener('click', () => {
     activeScene = scene3;
 });
 
+// Variáveis para o áudio
+let listener = null;
+let sound = null;
+let audioContext = null;
+let isMusicLoaded = false;  // Flag para verificar se a música foi carregada
+
+document.getElementById('scene3Btn').addEventListener('click', () => {
+    activeScene = scene3;
+
+    // Criar o AudioListener e o AudioContext
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    listener = new THREE.AudioListener();
+    camera.add(listener);
+
+    // Carregar e tocar a música, mas apenas se não estiver carregada
+    if (!sound) {
+        sound = new THREE.Audio(listener);
+        const audioLoader = new THREE.AudioLoader();
+        audioLoader.load('song.mp3', (buffer) => {
+            sound.setBuffer(buffer);
+            sound.setLoop(true);
+            sound.setVolume(0.5);
+            sound.play();
+            isMusicLoaded = true; // A música foi carregada
+        });
+    } else if (isMusicLoaded) {
+        // Se a música já foi carregada e foi parada, então tocamos novamente
+        sound.play();
+    }
+});
+
+document.getElementById('scene1Btn').addEventListener('click', () => {
+    activeScene = scene1;
+    stopMusic();
+});
+
+document.getElementById('scene2Btn').addEventListener('click', () => {
+    activeScene = scene2;
+    stopMusic();
+});
+
+function stopMusic() {
+    if (sound) {
+        sound.stop(); // Para o áudio
+    }
+    if (audioContext) {
+        audioContext.suspend(); // Pausa o contexto de áudio
+    }
+}
+
 // Loop de animação
 function animate() {
     requestAnimationFrame(animate);
@@ -155,6 +208,11 @@ function animate() {
         // gltfModel3.rotation.set(0, 0, 0);  // Garantir que o modelo não gire
         // gltfModel3.position.set(0, 0, 0);  // Garantir que o modelo não flutue
     }
+
+    if (mixer3) {
+      // console.log("Atualizando animação do mixer3");
+      mixer3.update(clock.getDelta());
+  }
 
     // Animação de sceneradio na cena 3
     if (sceneradio) {
@@ -173,8 +231,10 @@ function animate() {
     }
 
     // Atualizar a animação do GLTF (apenas para cena3)
-    if (mixer3) {
-        mixer3.update(clock.getDelta());
+    
+    // Animar obamium
+    if (gltfModel2) {
+      gltfModel2.rotation.y += 0.01;
     }
 
     renderer.render(activeScene, camera);
