@@ -115,6 +115,18 @@ gltfLoader4.load('sceneradio.gltf', (gltf) => {
     sceneradio.position.set(5, 0, 0);  // Colocado ao lado do modelo principal
     sceneradio.rotation.set(0, 90, 0)
     scene3.add(sceneradio);
+
+    // Adicionar música
+    const listener = new THREE.AudioListener();
+    camera.add(listener);
+    const sound = new THREE.Audio(listener);
+    const audioLoader = new THREE.AudioLoader();
+    audioLoader.load('song.mp3', (buffer) => {
+        sound.setBuffer(buffer);
+        sound.setLoop(true);
+        sound.setVolume(0.5);
+        sound.play();
+    });
 });
 
 // ---------- Alternar entre cenas ----------
@@ -140,8 +152,24 @@ function animate() {
     // Remover a rotação e flutuação da cena 3
     if (gltfModel3) {
         // Removendo rotação e flutuação
-        gltfModel3.rotation.set(0, 0, 0);  // Garantir que o modelo não gire
-        gltfModel3.position.set(0, 0, 0);  // Garantir que o modelo não flutue
+        // gltfModel3.rotation.set(0, 0, 0);  // Garantir que o modelo não gire
+        // gltfModel3.position.set(0, 0, 0);  // Garantir que o modelo não flutue
+    }
+
+    // Animação de sceneradio na cena 3
+    if (sceneradio) {
+        let time = clock.getElapsedTime();
+
+        // Oscilação no eixo Z de -6 a 6 graus
+        sceneradio.rotation.z = Math.sin(time * 5) * Math.PI / 30;  // -6 a 6 graus
+
+        // Escala Y e X inversamente proporcionais
+        const scaleY = 0.1 + Math.cos(time * 15) * 0.03;  // Oscilar de 0.85 a 1.15
+        sceneradio.scale.set(
+            0.1,  // Oscilar X de 0.85 a 1.15
+            scaleY,
+            0.1 + Math.cos(time * 15) * 0.03  // Oscilar Z de 0.85 a 1.15
+        );
     }
 
     // Atualizar a animação do GLTF (apenas para cena3)
